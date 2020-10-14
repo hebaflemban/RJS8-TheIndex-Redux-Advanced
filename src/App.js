@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Switch, Route, Redirect } from "react-router-dom";
-import axios from "axios";
+import React, { useState } from "react";
+import { Switch, Route, Redirect, withRouter } from "react-router-dom";
+import { connect } from "react-redux";
 
 // Components
 import Sidebar from "./Sidebar";
@@ -9,39 +9,8 @@ import AuthorsList from "./AuthorsList";
 import AuthorDetail from "./AuthorDetail";
 import BookList from "./BookList";
 
-const instance = axios.create({
-  baseURL: "https://the-index-api.herokuapp.com"
-});
-
-const App = () => {
-  const [authors, setAuthors] = useState([]);
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState([]);
-
-  useEffect(() => {
-    const fetchAllAuthors = async () => {
-      const res = await instance.get("/api/authors/");
-      return res.data;
-    };
-
-    const fetchAllBooks = async () => {
-      const res = await instance.get("/api/books/");
-      return res.data;
-    };
-    const fetchAll = async () => {
-      try {
-        const authorsData = await fetchAllAuthors();
-        const booksData = await fetchAllBooks();
-
-        setAuthors(authorsData);
-        setBooks(booksData);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchAll();
-  }, []);
+const App = (props) => {
+  const [loading] = useState(false);
 
   const getView = () => {
     if (loading) {
@@ -54,10 +23,10 @@ const App = () => {
             <AuthorDetail />
           </Route>
           <Route path="/authors/">
-            <AuthorsList authors={authors} />
+            <AuthorsList authors={props.authors} />
           </Route>
           <Route path="/books/:bookColor?">
-            <BookList books={books} />
+            <BookList books={props.books} />
           </Route>
         </Switch>
       );
@@ -76,4 +45,11 @@ const App = () => {
   );
 };
 
-export default App;
+const mapStateToProps = (state) => {
+  return {
+    authors: state.rootAuthors.authors,
+    books: state.rootBooks.books,
+  };
+};
+
+export default withRouter(connect(mapStateToProps)(App));
